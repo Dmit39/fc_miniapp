@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     )
 
     if (!fnameResponse.ok) {
+      console.log('[v0] Fname lookup failed:', fnameResponse.status)
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -26,9 +27,12 @@ export async function GET(request: NextRequest) {
     }
 
     const fnameData = await fnameResponse.json()
-    const fid = fnameData.to
+    
+    const transfer = fnameData.transfers?.[0]
+    const fid = transfer?.to
 
     if (!fid) {
+      console.log('[v0] No FID found in response:', fnameData)
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
