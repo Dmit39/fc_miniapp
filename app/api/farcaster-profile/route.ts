@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    console.log('[v0] Fetching profile from Neynar for username:', username)
+
     // Fetch user info from Neynar API
     const response = await fetch(
       `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}`,
@@ -29,6 +31,8 @@ export async function GET(request: NextRequest) {
         },
       }
     )
+
+    console.log('[v0] Neynar API response status:', response.status)
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -41,6 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json()
+    console.log('[v0] Neynar data received successfully')
 
     // Extract relevant profile data
     const user = data.user
@@ -53,13 +58,13 @@ export async function GET(request: NextRequest) {
       follower_count: user.follower_count,
       following_count: user.following_count,
       profile_created_at: user.created_at,
-      viewer_neynar_score: user.viewer_neynar_score,
       spam_label: user.spam_label,
     }
 
+    console.log('[v0] Profile data ready:', profileData)
     return NextResponse.json(profileData)
   } catch (error) {
-    console.error('Error fetching profile:', error)
+    console.error('[v0] Error fetching profile:', error)
     return NextResponse.json(
       { error: 'Failed to fetch profile' },
       { status: 500 }

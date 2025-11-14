@@ -25,16 +25,23 @@ export default function Home() {
         console.log('[v0] SDK context:', context)
         console.log('[v0] User from context:', context?.user)
 
+        let frameUsername = null
         if (context?.user?.username) {
-          console.log('[v0] Auto-loading profile for user:', context.user.username)
-          setUsername(context.user.username)
+          frameUsername = context.user.username
+        } else if (context?.user?.fid) {
+          // If we have FID but no username, we could use that too
+          console.log('[v0] Got FID from context:', context.user.fid)
+        }
+
+        if (frameUsername) {
+          console.log('[v0] Auto-loading profile for user:', frameUsername)
+          setUsername(frameUsername)
           setShowStats(true)
         } else {
-          console.log('[v0] No user context, showing input form')
+          console.log('[v0] No user context available, will show input form')
         }
       } catch (error) {
         console.log('[v0] Error initializing SDK:', error)
-        // Fallback: just show the input form
       } finally {
         setIsLoading(false)
       }
@@ -42,7 +49,6 @@ export default function Home() {
 
     initializeFrame()
 
-    // Fallback: Check URL parameters
     const params = new URLSearchParams(window.location.search)
     const urlUsername = params.get('user')
     if (urlUsername) {

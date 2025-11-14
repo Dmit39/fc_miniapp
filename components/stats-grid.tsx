@@ -13,7 +13,6 @@ interface StatsGridProps {
       spam_count: number
       unspam_count: number
     }
-    viewer_neynar_score?: number
   }
 }
 
@@ -27,7 +26,6 @@ export default function StatsGrid({ profile }: StatsGridProps) {
 
   const spamScore = profile.spam_label ? profile.spam_label.spam_count : 0
   const unspamScore = profile.spam_label ? profile.spam_label.unspam_count : 0
-  const neynarScore = profile.viewer_neynar_score || 0
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -65,13 +63,6 @@ export default function StatsGrid({ profile }: StatsGridProps) {
         subtitle={`${unspamScore} unspam`}
         icon="🚨"
         gradient="from-red-500/20 to-red-500/10"
-      />
-      
-      <StatCard
-        label="Neynar Score"
-        value={neynarScore.toFixed(2)}
-        icon="⭐"
-        gradient="from-yellow-500/20 to-yellow-500/10"
       />
     </div>
   )
