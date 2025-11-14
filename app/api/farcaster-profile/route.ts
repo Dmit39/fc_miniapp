@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('[v0] Fetching profile from Farcaster Hub for username:', username)
+    console.log('[v0] Fetching profile for username:', username)
 
     const response = await fetch(
-      `https://hub.lighthouse.farcaster.xyz/v1/userDataByFid?fid=${encodeURIComponent(username)}`,
+      `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -23,61 +23,36 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    console.log('[v0] Hub API response status:', response.status)
+    console.log('[v0] Neynar API response status:', response.status)
 
-    // If first request fails, try getting by username via searchable route
     if (!response.ok) {
-      const usernameResponse = await fetch(
-        `https://hub.lighthouse.farcaster.xyz/v1/userDataByUsername?username=${encodeURIComponent(username)}`,
-        {
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      )
-
-      if (!usernameResponse.ok) {
-        if (usernameResponse.status === 404) {
-          return NextResponse.json(
-            { error: 'User not found' },
-            { status: 404 }
-          )
-        }
-        throw new Error(`Hub API error: ${usernameResponse.status}`)
+      if (response.status === 404) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        )
       }
-
-      const userData = await usernameResponse.json()
-      console.log('[v0] User data received from Hub')
-
-      const profileData = {
-        fid: userData.fid || userData.id,
-        username: userData.username,
-        display_name: userData.display_name || userData.username,
-        pfp_url: userData.pfp_url || userData.pfpUrl,
-        bio: userData.bio,
-        follower_count: userData.follower_count || 0,
-        following_count: userData.following_count || 0,
-        profile_created_at: userData.created_at || new Date().toISOString(),
-        spam_label: null,
-      }
-
-      console.log('[v0] Profile data ready:', profileData)
-      return NextResponse.json(profileData)
+      throw new Error(`API error: ${response.status}`)
     }
 
     const data = await response.json()
-    console.log('[v0] Data received successfully from Hub')
+    console.log('[v0] User data received successfully')
+
+    const user = data.user || data
 
     const profileData = {
-      fid: data.fid || data.id,
-      username: data.username,
-      display_name: data.display_name || data.username,
-      pfp_url: data.pfp_url || data.pfpUrl,
-      bio: data.bio,
-      follower_count: data.follower_count || 0,
-      following_count: data.following_count || 0,
-      profile_created_at: data.created_at || new Date().toISOString(),
-      spam_label: null,
+      fid: user.fid,
+      username: user.username,
+      display_name: user.display_name || user.username,
+      pfp_url: user.pfp_url,
+      bio: user.profile?.bio || '',
+      follower_count: user.follower_count || 0,
+      following_count: user.following_count || 0,
+      profile_created_at: new Date(user.created_at).toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
     }
 
     console.log('[v0] Profile data ready:', profileData)
