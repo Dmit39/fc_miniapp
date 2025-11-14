@@ -6,8 +6,8 @@
     "iconUrl": "https://fc-miniapp.vercel.app/icon.png",
     "homeUrl": "https://fc-miniapp.vercel.app",
     "imageUrl": "https://fc-miniapp.vercel.app/image.png",
-    "splashImageUrl": "fc-miniapp.vercel.app/splash.png",
-    "webhookUrl": "fc-miniapp.vercel.app/api/webhook",
+    "splashImageUrl": "https://fc-miniapp.vercel.app/splash.png",
+    "webhookUrl": "https://fc-miniapp.vercel.app/api/webhook",
     "subtitle": "fc_miniapp",
     "description": "aappp.",
     "primaryCategory": "utility"
