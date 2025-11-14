@@ -91,11 +91,10 @@ export default function Home() {
           <p className="text-muted-foreground text-lg">View your profile statistics and analytics</p>
         </div>
 
-        {!showStats ? (
-          <ProfileInput onLoadProfile={handleLoadProfile} />
-        ) : (
-          <ProfileStatsDisplay username={username} onBack={() => setShowStats(false)} />
-        )}
+        <ProfileInput onLoadProfile={(user) => {
+          setUsername(user)
+          setShowStats(true)
+        }} />
       </div>
     </main>
   )

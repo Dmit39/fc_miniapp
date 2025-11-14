@@ -1,6 +1,5 @@
 'use client'
 
-import { Card } from '@/components/ui/card'
 import StatCard from './stat-card'
 
 interface StatsGridProps {
@@ -25,7 +24,6 @@ export default function StatsGrid({ profile }: StatsGridProps) {
   })
 
   const spamScore = profile.spam_label ? profile.spam_label.spam_count : 0
-  const unspamScore = profile.spam_label ? profile.spam_label.unspam_count : 0
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -59,8 +57,7 @@ export default function StatsGrid({ profile }: StatsGridProps) {
       
       <StatCard
         label="Spam Label"
-        value={`${spamScore} spam`}
-        subtitle={`${unspamScore} unspam`}
+        value={spamScore.toString()}
         icon="🚨"
         gradient="from-red-500/20 to-red-500/10"
       />
