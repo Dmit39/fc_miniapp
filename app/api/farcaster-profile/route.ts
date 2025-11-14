@@ -14,41 +14,87 @@ export async function GET(request: NextRequest) {
 
     console.log('[v0] Fetching profile for username:', username)
 
-    const response = await fetch(
-      `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
+    const fnameResponse = await fetch(
+      `https://fnames.farcaster.xyz/transfers/current?name=${encodeURIComponent(username)}`
     )
 
-    console.log('[v0] Neynar API response status:', response.status)
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
-        )
-      }
-      throw new Error(`API error: ${response.status}`)
+    if (!fnameResponse.ok) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
     }
 
-    const data = await response.json()
-    console.log('[v0] User data received successfully')
+    const fnameData = await fnameResponse.json()
+    const fid = fnameData.to
 
-    const user = data.user || data
+    if (!fid) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    console.log('[v0] Found FID:', fid)
+
+    const hubResponse = await fetch(
+      `https://hub.farcaster.xyz/v1/userDataByFid?fid=${fid}`
+    )
+
+    if (!hubResponse.ok) {
+      throw new Error(`Hub API error: ${hubResponse.status}`)
+    }
+
+    const hubData = await hubResponse.json()
+    console.log('[v0] Hub API response received')
+
+    // Extract profile data from Hub API response
+    let pfpUrl = ''
+    let displayName = username
+    let bio = ''
+
+    if (hubData.messages) {
+      hubData.messages.forEach((msg: any) => {
+        const data = msg.data?.userDataBody
+        if (data?.type === 'PFP') {
+          pfpUrl = data.value
+        } else if (data?.type === 'DISPLAY') {
+          displayName = data.value
+        } else if (data?.type === 'BIO') {
+          bio = data.value
+        }
+      })
+    }
+
+    // Using backup endpoint for counts
+    let followerCount = 0
+    let followingCount = 0
+
+    try {
+      const searchcasterResponse = await fetch(
+        `https://api.searchcaster.xyz/search/users?username=${encodeURIComponent(username)}&limit=1`
+      )
+      if (searchcasterResponse.ok) {
+        const searchcasterData = await searchcasterResponse.json()
+        if (searchcasterData.result?.users?.[0]) {
+          const user = searchcasterData.result.users[0]
+          followerCount = user.follower_count || 0
+          followingCount = user.following_count || 0
+        }
+      }
+    } catch (e) {
+      console.log('[v0] Searchcaster backup failed, using defaults')
+    }
 
     const profileData = {
-      fid: user.fid,
-      username: user.username,
-      display_name: user.display_name || user.username,
-      pfp_url: user.pfp_url,
-      bio: user.profile?.bio || '',
-      follower_count: user.follower_count || 0,
-      following_count: user.following_count || 0,
-      profile_created_at: new Date(user.created_at).toLocaleDateString('ru-RU', {
+      fid: fid,
+      username: username,
+      display_name: displayName,
+      pfp_url: pfpUrl || '/diverse-avatars.png',
+      bio: bio,
+      follower_count: followerCount,
+      following_count: followingCount,
+      profile_created_at: new Date().toLocaleDateString('ru-RU', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
