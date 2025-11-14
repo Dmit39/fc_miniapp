@@ -1,11 +1,17 @@
 {
-  "frame": {
-  "version": "1",
-  "name": "Farcaster stats",
-  "homepage_url": "https://hfc-miniapp.vercel.app/",
-  "description": "Mini App: show stats",
-  "icon_url": "https://fc-miniapp.vercel.app/icon.png",
-  "app_url": "https://fc-miniapp.vercel.app/"
+ "frame": {
+    "name": "miniapp",
+    "version": "1",
+     "name": "Farcaster stats",
+    "iconUrl": "https://fc-miniapp.vercel.app/icon.png",
+    "homeUrl": "https://fc-miniapp.vercel.app",
+    "imageUrl": "https://fc-miniapp.vercel.app/image.png",
+    "splashImageUrl": "fc-miniapp.vercel.app/splash.png",
+    "webhookUrl": "fc-miniapp.vercel.app/api/webhook",
+    "subtitle": "fc_miniapp",
+    "description": "aappp.",
+    "primaryCategory": "utility"
+  
 },
   "accountAssociation": {
     "header": "eyJmaWQiOjM3MDc1OSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDcxNzQwNDM3NzFiYUIyQTVDZTM4MWIwNDlBYTAwNzkxNDhFNjQ5Q0MifQ",
