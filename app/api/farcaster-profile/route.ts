@@ -3,23 +3,59 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const username = searchParams.get('username')
+    let username = searchParams.get('username')
 
     if (!username) {
+      console.log('[v0] No username provided')
       return NextResponse.json(
         { error: 'Username is required' },
         { status: 400 }
       )
     }
 
-    console.log('[v0] Fetching profile for username:', username)
+    username = username.trim().replace(/^@/, '')
+    console.log('[v0] Cleaned username:', username)
 
+    // Try Neynar API first (public endpoint)
+    console.log('[v0] Trying Neynar public API...')
+    try {
+      const neynarResponse = await fetch(
+        `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}`
+      )
+
+      if (neynarResponse.ok) {
+        const neynarData = await neynarResponse.json()
+        console.log('[v0] Neynar API success')
+        
+        const user = neynarData.user
+        return NextResponse.json({
+          fid: user.fid,
+          username: user.username,
+          display_name: user.display_name || user.username,
+          pfp_url: user.pfp?.url || '/diverse-avatars.png',
+          bio: user.profile?.bio?.text || '',
+          follower_count: user.follower_count || 0,
+          following_count: user.following_count || 0,
+          profile_created_at: new Date().toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+        })
+      }
+    } catch (e) {
+      console.log('[v0] Neynar API error:', e)
+    }
+
+    console.log('[v0] Trying Fname Registry...')
     const fnameResponse = await fetch(
       `https://fnames.farcaster.xyz/transfers/current?name=${encodeURIComponent(username)}`
     )
 
+    console.log('[v0] Fname response status:', fnameResponse.status)
+
     if (!fnameResponse.ok) {
-      console.log('[v0] Fname lookup failed:', fnameResponse.status)
+      console.log('[v0] Fname lookup failed, status:', fnameResponse.status)
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -27,12 +63,13 @@ export async function GET(request: NextRequest) {
     }
 
     const fnameData = await fnameResponse.json()
+    console.log('[v0] Fname data received:', JSON.stringify(fnameData))
     
     const transfer = fnameData.transfers?.[0]
     const fid = transfer?.to
 
     if (!fid) {
-      console.log('[v0] No FID found in response:', fnameData)
+      console.log('[v0] No FID found in response')
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -41,6 +78,7 @@ export async function GET(request: NextRequest) {
 
     console.log('[v0] Found FID:', fid)
 
+    // Get profile from Hub
     const hubResponse = await fetch(
       `https://hub.farcaster.xyz/v1/userDataByFid?fid=${fid}`
     )
@@ -52,7 +90,6 @@ export async function GET(request: NextRequest) {
     const hubData = await hubResponse.json()
     console.log('[v0] Hub API response received')
 
-    // Extract profile data from Hub API response
     let pfpUrl = ''
     let displayName = username
     let bio = ''
@@ -70,7 +107,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Using backup endpoint for counts
     let followerCount = 0
     let followingCount = 0
 
@@ -87,7 +123,7 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (e) {
-      console.log('[v0] Searchcaster backup failed, using defaults')
+      console.log('[v0] Searchcaster failed:', e)
     }
 
     const profileData = {
