@@ -4,11 +4,32 @@ import { useState, useEffect } from 'react'
 import ProfileStatsDisplay from '@/components/profile-stats-display'
 import ProfileInput from '@/components/profile-input'
 
+declare global {
+  interface Window {
+    farcasterFrame?: {
+      sdk: {
+        actions: {
+          ready: () => void
+        }
+      }
+    }
+  }
+}
+
 export default function Home() {
   const [username, setUsername] = useState<string>('')
   const [showStats, setShowStats] = useState(false)
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.farcasterFrame) {
+      try {
+        window.farcasterFrame.sdk.actions.ready()
+        console.log('[v0] Farcaster Frame SDK ready called')
+      } catch (error) {
+        console.log('[v0] Not running in Farcaster frame context')
+      }
+    }
+
     // Try to get username from URL parameters
     const params = new URLSearchParams(window.location.search)
     const urlUsername = params.get('user')

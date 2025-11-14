@@ -36,6 +36,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script src="https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk"></script>
+      </head>
       <body className={`font-sans antialiased dark`}>
         {children}
         <Analytics />
