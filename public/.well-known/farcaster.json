@@ -1,4 +1,5 @@
 {
+  "frame": {
   "version": "fc_miniapp",
   "name": "Farcaster stats",
   "homepage_url": "https://hfc-miniapp.vercel.app/",
