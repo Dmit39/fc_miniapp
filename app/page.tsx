@@ -65,6 +65,12 @@ export default function Home() {
     setShowStats(true)
   }
 
+  const handleGoBack = () => {
+    console.log('[v0] Going back to input form')
+    setShowStats(false)
+    setUsername('')
+  }
+
   if (isLoading) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8 flex items-center justify-center">
@@ -91,10 +97,15 @@ export default function Home() {
           <p className="text-muted-foreground text-lg">View your profile statistics and analytics</p>
         </div>
 
-        <ProfileInput onLoadProfile={(user) => {
-          setUsername(user)
-          setShowStats(true)
-        }} />
+        {showStats && username ? (
+          <ProfileStatsDisplay username={username} onBack={handleGoBack} />
+        ) : (
+          <ProfileInput onLoadProfile={(user) => {
+            console.log('[v0] Profile load requested for user:', user)
+            setUsername(user)
+            setShowStats(true)
+          }} />
+        )}
       </div>
     </main>
   )

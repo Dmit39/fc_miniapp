@@ -12,14 +12,20 @@ interface ProfileInputProps {
 export default function ProfileInput({ onLoadProfile }: ProfileInputProps) {
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[v0] Form submitted with input:', input)
+    
     if (!input.trim()) {
       setError('Please enter a username')
       return
     }
+    
     setError('')
+    setIsLoading(true)
+    console.log('[v0] Calling onLoadProfile with:', input.trim())
     onLoadProfile(input.trim())
   }
 
@@ -36,14 +42,16 @@ export default function ProfileInput({ onLoadProfile }: ProfileInputProps) {
             }}
             placeholder="Enter username (e.g. vitalik)"
             className="bg-muted border-border/50 text-foreground placeholder:text-muted-foreground"
+            disabled={isLoading}
           />
           {error && <p className="text-destructive text-sm mt-2">{error}</p>}
         </div>
         <Button 
           type="submit" 
           className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+          disabled={isLoading}
         >
-          View Profile Stats
+          {isLoading ? 'Loading...' : 'View Profile Stats'}
         </Button>
       </form>
     </Card>

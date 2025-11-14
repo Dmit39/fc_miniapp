@@ -8,7 +8,7 @@ import StatsGrid from './stats-grid'
 
 interface ProfileStatsDisplayProps {
   username: string
-  onBack: () => void
+  onBack?: () => void
 }
 
 interface FarcasterProfile {
@@ -23,7 +23,6 @@ interface FarcasterProfile {
   viewer_context?: {
     follow_state: string
   }
-  viewer_neynar_score?: number
   spam_label?: {
     unspam_count: number
     spam_count: number
@@ -83,9 +82,11 @@ export default function ProfileStatsDisplay({ username, onBack }: ProfileStatsDi
     return (
       <Card className="p-8 border-border/50 bg-card/50 backdrop-blur-sm text-center">
         <p className="text-destructive mb-4">{error || 'Profile not found'}</p>
-        <Button onClick={onBack} variant="outline">
-          Try Another Profile
-        </Button>
+        {onBack && (
+          <Button onClick={onBack} variant="outline">
+            Try Another Profile
+          </Button>
+        )}
       </Card>
     )
   }
@@ -95,15 +96,17 @@ export default function ProfileStatsDisplay({ username, onBack }: ProfileStatsDi
       <ProfileHeader profile={profile} />
       <StatsGrid profile={profile} />
       
-      <div className="flex justify-center pt-4">
-        <Button 
-          onClick={onBack} 
-          variant="outline"
-          className="border-border/50 hover:bg-muted"
-        >
-          Search Another Profile
-        </Button>
-      </div>
+      {onBack && (
+        <div className="flex justify-center pt-4">
+          <Button 
+            onClick={onBack} 
+            variant="outline"
+            className="border-border/50 hover:bg-muted"
+          >
+            Search Another Profile
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
