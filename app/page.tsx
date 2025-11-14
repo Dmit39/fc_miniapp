@@ -21,14 +21,20 @@ export default function Home() {
   const [showStats, setShowStats] = useState(false)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.farcasterFrame) {
+    const initializeFrame = async () => {
       try {
-        window.farcasterFrame.sdk.actions.ready()
-        console.log('[v0] Farcaster Frame SDK ready called')
+        // Check if running in Farcaster context
+        if (typeof window !== 'undefined' && window.farcasterFrame?.sdk?.actions?.ready) {
+          window.farcasterFrame.sdk.actions.ready()
+          console.log('[v0] Farcaster Frame SDK ready called successfully')
+        }
       } catch (error) {
-        console.log('[v0] Not running in Farcaster frame context')
+        console.log('[v0] Frame context not available, running as standalone app')
       }
     }
+
+    // Small delay to ensure SDK script is loaded
+    const timer = setTimeout(initializeFrame, 100)
 
     // Try to get username from URL parameters
     const params = new URLSearchParams(window.location.search)
@@ -37,6 +43,8 @@ export default function Home() {
       setUsername(urlUsername)
       setShowStats(true)
     }
+
+    return () => clearTimeout(timer)
   }, [])
 
   const handleLoadProfile = (user: string) => {
