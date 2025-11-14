@@ -4,24 +4,6 @@ import { useState, useEffect } from 'react'
 import ProfileStatsDisplay from '@/components/profile-stats-display'
 import ProfileInput from '@/components/profile-input'
 
-declare global {
-  interface Window {
-    farcasterFrame?: {
-      sdk: {
-        actions: {
-          ready: () => void
-        }
-        context: {
-          user?: {
-            username: string
-            fid: number
-          }
-        }
-      }
-    }
-  }
-}
-
 export default function Home() {
   const [username, setUsername] = useState<string>('')
   const [showStats, setShowStats] = useState(false)
@@ -30,30 +12,29 @@ export default function Home() {
   useEffect(() => {
     const initializeFrame = async () => {
       try {
-        console.log('[v0] Initializing Farcaster Frame...')
+        console.log('[v0] Starting miniapp SDK initialization...')
         
-        // Call ready immediately
-        if (typeof window !== 'undefined' && window.farcasterFrame?.sdk?.actions?.ready) {
-          window.farcasterFrame.sdk.actions.ready()
-          console.log('[v0] Farcaster Frame SDK ready called')
-        }
-
-        // Small delay to ensure SDK context is available
-        await new Promise(resolve => setTimeout(resolve, 100))
-
-        // Check if we have user context from Farcaster
-        const userContext = window.farcasterFrame?.sdk?.context?.user
-        console.log('[v0] User context:', userContext)
+        const { sdk } = await import('@farcaster/miniapp-sdk')
         
-        if (userContext?.username) {
-          console.log('[v0] Auto-loading profile for:', userContext.username)
-          setUsername(userContext.username)
+        console.log('[v0] SDK imported, calling ready()')
+        await sdk.actions.ready()
+        console.log('[v0] SDK ready() called successfully')
+
+        // Get context
+        const context = sdk.context
+        console.log('[v0] SDK context:', context)
+        console.log('[v0] User from context:', context?.user)
+
+        if (context?.user?.username) {
+          console.log('[v0] Auto-loading profile for user:', context.user.username)
+          setUsername(context.user.username)
           setShowStats(true)
         } else {
-          console.log('[v0] No user context found, showing input form')
+          console.log('[v0] No user context, showing input form')
         }
       } catch (error) {
-        console.log('[v0] Error initializing Frame:', error)
+        console.log('[v0] Error initializing SDK:', error)
+        // Fallback: just show the input form
       } finally {
         setIsLoading(false)
       }
@@ -61,7 +42,7 @@ export default function Home() {
 
     initializeFrame()
 
-    // Also check URL parameters as fallback
+    // Fallback: Check URL parameters
     const params = new URLSearchParams(window.location.search)
     const urlUsername = params.get('user')
     if (urlUsername) {

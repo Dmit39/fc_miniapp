@@ -38,7 +38,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/.well-known/farcaster.json" />
-        <script src="https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk"></script>
       </head>
       <body className={`font-sans antialiased dark`}>
         {children}
