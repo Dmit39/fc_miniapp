@@ -5,4 +5,10 @@
   "description": "Mini App: show stats",
   "icon_url": "https://fc-miniapp.vercel.app/icon.png",
   "app_url": "https://fc-miniapp.vercel.app/"
+},
+  "accountAssociation": {
+    "header": "eyJmaWQiOjM3MDc1OSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDcxNzQwNDM3NzFiYUIyQTVDZTM4MWIwNDlBYTAwNzkxNDhFNjQ5Q0MifQ",
+    "payload": "eyJkb21haW4iOiJmYy1taW5pYXBwLnZlcmNlbC5hcHAifQ",
+    "signature": "+TV8h5O20oq9YSPIRE9b//5qL5clmwgMK1AAlKISya16DmNJ4qDLYOUDGWmex/kUei98qhJQr3PedFqsBY3mKBw="
+  }
 }
