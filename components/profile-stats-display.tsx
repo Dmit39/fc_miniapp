@@ -38,29 +38,36 @@ export default function ProfileStatsDisplay({ username, onBack }: ProfileStatsDi
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        console.log('[v0] Fetching profile for:', username)
         setLoading(true)
         setError('')
         
-        // Fetch from Neynar API
         const response = await fetch(
           `/api/farcaster-profile?username=${encodeURIComponent(username)}`
         )
         
+        console.log('[v0] API Response status:', response.status)
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch profile')
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to fetch profile')
         }
         
         const data = await response.json()
+        console.log('[v0] Profile data received:', data)
         setProfile(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load profile')
-        console.error('Error fetching profile:', err)
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load profile'
+        console.error('[v0] Error fetching profile:', err)
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProfile()
+    if (username) {
+      fetchProfile()
+    }
   }, [username])
 
   if (loading) {
