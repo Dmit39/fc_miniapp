@@ -14,65 +14,81 @@ export async function GET(request: NextRequest) {
 
     username = username.trim().replace(/^@/, '')
 
-    const apiKey = request.headers.get('x-neynar-api-key') || process.env.NEYNAR_API_KEY
-
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API key not configured. Please add NEYNAR_API_KEY in the Vars section.' },
-        { status: 503 }
-      )
-    }
-
-    const neynarUrl = `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}&api_key=${apiKey}`
+    const hubUrl = `https://hub.farcaster.xyz/server/userNameProofsByName/${username}`
     
-    const neynarResponse = await fetch(neynarUrl, {
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    })
+    const hubResponse = await fetch(hubUrl)
 
-    if (neynarResponse.status === 401 || neynarResponse.status === 403) {
-      return NextResponse.json(
-        { error: 'Invalid API key. Please check your NEYNAR_API_KEY in Vars.' },
-        { status: 401 }
-      )
-    }
-
-    if (!neynarResponse.ok) {
+    if (!hubResponse.ok) {
       return NextResponse.json(
         { error: 'User not found. Please check the username.' },
         { status: 404 }
       )
     }
 
-    const neynarData = await neynarResponse.json()
+    const proofsData = await hubResponse.json()
     
-    if (!neynarData.user) {
+    if (!proofsData.proofs || proofsData.proofs.length === 0) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       )
     }
 
-    const user = neynarData.user
-    const profileData = {
-      fid: user.fid,
-      username: user.username,
-      display_name: user.display_name || user.username,
-      pfp_url: user.pfp?.url || '/diverse-avatars.png',
-      bio: user.profile?.bio?.text || '',
-      follower_count: user.follower_count || 0,
-      following_count: user.following_count || 0,
-      profile_created_at: user.created_at
-        ? new Date(user.created_at).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })
-        : 'Unknown',
+    const fid = proofsData.proofs[0].fid
+
+    // Get user profile from Hub
+    const profileUrl = `https://hub.farcaster.xyz/server/userDataByFid/${fid}`
+    const profileResponse = await fetch(profileUrl)
+
+    if (!profileResponse.ok) {
+      return NextResponse.json(
+        { error: 'Could not fetch profile data' },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json(profileData)
+    const profileData = await profileResponse.json()
+    
+    // Get follower count
+    const followersUrl = `https://hub.farcaster.xyz/server/links/followers?targetFid=${fid}`
+    const followersResponse = await fetch(followersUrl)
+    const followersData = await followersResponse.json()
+    const followerCount = followersData.messages?.length || 0
+
+    // Get following count
+    const followingUrl = `https://hub.farcaster.xyz/server/links/following?fid=${fid}`
+    const followingResponse = await fetch(followingUrl)
+    const followingData = await followingResponse.json()
+    const followingCount = followingData.messages?.length || 0
+
+    // Extract profile information
+    let displayName = username
+    let pfpUrl = '/diverse-avatars.png'
+    let bio = ''
+    let createdAt = new Date().toLocaleDateString('ru-RU')
+
+    if (profileData.messages) {
+      profileData.messages.forEach((msg: any) => {
+        if (msg.userDataBody?.type === 1) {
+          displayName = msg.userDataBody.value || displayName
+        } else if (msg.userDataBody?.type === 2) {
+          pfpUrl = msg.userDataBody.value || pfpUrl
+        } else if (msg.userDataBody?.type === 3) {
+          bio = msg.userDataBody.value || bio
+        }
+      })
+    }
+
+    return NextResponse.json({
+      fid,
+      username,
+      display_name: displayName,
+      pfp_url: pfpUrl,
+      bio,
+      follower_count: followerCount,
+      following_count: followingCount,
+      profile_created_at: createdAt,
+    })
   } catch (error) {
     console.error('Error fetching profile:', error)
     return NextResponse.json(

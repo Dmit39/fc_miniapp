@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import ProfileStatsDisplay from '@/components/profile-stats-display'
 import ProfileInput from '@/components/profile-input'
 
@@ -18,27 +19,14 @@ export default function Home() {
         
         console.log('[v0] SDK imported, calling ready()')
         await sdk.actions.ready()
-        console.log('[v0] SDK ready() called successfully')
 
         // Get context
         const context = sdk.context
-        console.log('[v0] SDK context:', context)
-        console.log('[v0] User from context:', context?.user)
-
         let frameUsername = null
         if (context?.user?.username) {
           frameUsername = context.user.username
-        } else if (context?.user?.fid) {
-          // If we have FID but no username, we could use that too
-          console.log('[v0] Got FID from context:', context.user.fid)
-        }
-
-        if (frameUsername) {
-          console.log('[v0] Auto-loading profile for user:', frameUsername)
           setUsername(frameUsername)
           setShowStats(true)
-        } else {
-          console.log('[v0] No user context available, will show input form')
         }
       } catch (error) {
         console.log('[v0] Error initializing SDK:', error)
@@ -52,21 +40,13 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search)
     const urlUsername = params.get('user')
     if (urlUsername) {
-      console.log('[v0] Loading profile from URL param:', urlUsername)
       setUsername(urlUsername)
       setShowStats(true)
       setIsLoading(false)
     }
   }, [])
 
-  const handleLoadProfile = (user: string) => {
-    console.log('[v0] Loading profile:', user)
-    setUsername(user)
-    setShowStats(true)
-  }
-
   const handleGoBack = () => {
-    console.log('[v0] Going back to input form')
     setShowStats(false)
     setUsername('')
   }
@@ -86,22 +66,25 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-white font-bold text-lg">⬇</span>
-            </div>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Image 
+              src="/logo.jpg" 
+              alt="Farcaster Stats Logo"
+              width={48}
+              height={48}
+              className="rounded-full shadow-lg"
+            />
             <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
               Farcaster Stats
             </h1>
           </div>
-          <p className="text-muted-foreground text-lg">View your profile statistics and analytics</p>
+          <p className="text-muted-foreground text-lg">View your profile statistics</p>
         </div>
 
         {showStats && username ? (
           <ProfileStatsDisplay username={username} onBack={handleGoBack} />
         ) : (
           <ProfileInput onLoadProfile={(user) => {
-            console.log('[v0] Profile load requested for user:', user)
             setUsername(user)
             setShowStats(true)
           }} />
