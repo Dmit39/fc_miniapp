@@ -16,7 +16,11 @@ export async function GET(request: NextRequest) {
     username = username.trim().replace(/^@/, '')
     console.log('[v0] Cleaned username:', username)
 
-    if (!process.env.NEYNAR_API_KEY) {
+    const apiKey = process.env.NEYNAR_API_KEY
+    
+    console.log('[v0] API Key check:', apiKey ? 'Found' : 'Missing')
+
+    if (!apiKey) {
       console.log('[v0] Warning: NEYNAR_API_KEY not configured')
       return NextResponse.json(
         { error: 'API key not configured. Please add NEYNAR_API_KEY in the Vars section.' },
@@ -24,9 +28,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Use Neynar API with API key
-    console.log('[v0] Fetching from Neynar API...')
-    const neynarUrl = `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}&api_key=${process.env.NEYNAR_API_KEY}`
+    console.log('[v0] Fetching from Neynar API with key...')
+    const neynarUrl = `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}&api_key=${apiKey}`
     
     const neynarResponse = await fetch(neynarUrl, {
       headers: {
