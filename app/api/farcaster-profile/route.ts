@@ -18,17 +18,18 @@ export async function GET(request: NextRequest) {
 
     const apiKey = process.env.NEYNAR_API_KEY
     
-    console.log('[v0] API Key check:', apiKey ? 'Found' : 'Missing')
+    console.log('[v0] API Key check:', apiKey ? 'Found (length: ' + apiKey.length + ')' : 'Missing')
+    console.log('[v0] All env vars available:', Object.keys(process.env).filter(k => k.includes('NEYNAR')))
 
     if (!apiKey) {
-      console.log('[v0] Warning: NEYNAR_API_KEY not configured')
+      console.log('[v0] ERROR: NEYNAR_API_KEY not found in environment')
       return NextResponse.json(
         { error: 'API key not configured. Please add NEYNAR_API_KEY in the Vars section.' },
         { status: 503 }
       )
     }
 
-    console.log('[v0] Fetching from Neynar API with key...')
+    console.log('[v0] Fetching from Neynar API for username:', username)
     const neynarUrl = `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}&api_key=${apiKey}`
     
     const neynarResponse = await fetch(neynarUrl, {
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     console.log('[v0] Neynar response status:', neynarResponse.status)
 
     if (neynarResponse.status === 401 || neynarResponse.status === 403) {
-      console.log('[v0] Invalid API key')
+      console.log('[v0] Invalid API key - authentication failed')
       return NextResponse.json(
         { error: 'Invalid API key. Please check your NEYNAR_API_KEY in Vars.' },
         { status: 401 }
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
         : 'Unknown',
     }
 
-    console.log('[v0] Profile data prepared:', profileData)
+    console.log('[v0] Profile data prepared:', profileData.username)
     return NextResponse.json(profileData)
   } catch (error) {
     console.error('[v0] Error fetching profile:', error)
