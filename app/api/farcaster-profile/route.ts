@@ -6,7 +6,6 @@ export async function GET(request: NextRequest) {
     let username = searchParams.get('username')
 
     if (!username) {
-      console.log('[v0] No username provided')
       return NextResponse.json(
         { error: 'Username is required' },
         { status: 400 }
@@ -14,22 +13,16 @@ export async function GET(request: NextRequest) {
     }
 
     username = username.trim().replace(/^@/, '')
-    console.log('[v0] Cleaned username:', username)
 
-    const apiKey = process.env.NEYNAR_API_KEY
-    
-    console.log('[v0] API Key check:', apiKey ? 'Found (length: ' + apiKey.length + ')' : 'Missing')
-    console.log('[v0] All env vars available:', Object.keys(process.env).filter(k => k.includes('NEYNAR')))
+    const apiKey = request.headers.get('x-neynar-api-key') || process.env.NEYNAR_API_KEY
 
     if (!apiKey) {
-      console.log('[v0] ERROR: NEYNAR_API_KEY not found in environment')
       return NextResponse.json(
         { error: 'API key not configured. Please add NEYNAR_API_KEY in the Vars section.' },
         { status: 503 }
       )
     }
 
-    console.log('[v0] Fetching from Neynar API for username:', username)
     const neynarUrl = `https://api.neynar.com/v2/farcaster/user/by_username?username=${encodeURIComponent(username)}&api_key=${apiKey}`
     
     const neynarResponse = await fetch(neynarUrl, {
@@ -38,10 +31,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    console.log('[v0] Neynar response status:', neynarResponse.status)
-
     if (neynarResponse.status === 401 || neynarResponse.status === 403) {
-      console.log('[v0] Invalid API key - authentication failed')
       return NextResponse.json(
         { error: 'Invalid API key. Please check your NEYNAR_API_KEY in Vars.' },
         { status: 401 }
@@ -49,8 +39,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!neynarResponse.ok) {
-      const errorText = await neynarResponse.text()
-      console.log('[v0] Neynar error response:', errorText)
       return NextResponse.json(
         { error: 'User not found. Please check the username.' },
         { status: 404 }
@@ -58,10 +46,8 @@ export async function GET(request: NextRequest) {
     }
 
     const neynarData = await neynarResponse.json()
-    console.log('[v0] Neynar data received successfully')
     
     if (!neynarData.user) {
-      console.log('[v0] No user data in response')
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -77,8 +63,8 @@ export async function GET(request: NextRequest) {
       bio: user.profile?.bio?.text || '',
       follower_count: user.follower_count || 0,
       following_count: user.following_count || 0,
-      profile_created_at: user.verified_addresses?.[0]?.created_at 
-        ? new Date(user.verified_addresses[0].created_at).toLocaleDateString('ru-RU', {
+      profile_created_at: user.created_at
+        ? new Date(user.created_at).toLocaleDateString('ru-RU', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -86,10 +72,9 @@ export async function GET(request: NextRequest) {
         : 'Unknown',
     }
 
-    console.log('[v0] Profile data prepared:', profileData.username)
     return NextResponse.json(profileData)
   } catch (error) {
-    console.error('[v0] Error fetching profile:', error)
+    console.error('Error fetching profile:', error)
     return NextResponse.json(
       { error: 'Failed to fetch profile. Please try again.' },
       { status: 500 }
